@@ -1,7 +1,7 @@
 var width=document.documentElement.clientWidth;
 var height=document.documentElement.clientHeight;
 init(60,"mylegend",width,height,main);
-var layer,gamelayer,timelayer,gmlayer;
+var layer,gamelayer,timelayer,gmlayer,endlayer;
 var gmap,basic_style,basic_color,field;
 var initx,inity;
 var gmaplen,gmaplength,stlen,stlength;
@@ -34,6 +34,7 @@ function main(){
         gameinit(game);
         ginit();
         key_dir();
+        touch();
     })
 }
 function gameinit(bacfun){
@@ -256,6 +257,15 @@ function load_map(){
             }
         }
     }
+    /*如果第一层里面有为1的值，说明游戏结束*/
+    for(j in gmap[0]){
+        if(gmap[1][j]==1){
+            /*游戏结束*/
+            clearInterval(moveDown_t);
+            end();
+            return;
+        }
+    }
     /*重新调用*/
     game();
 }
@@ -296,7 +306,7 @@ function move_left_right(direction){
     gamelayer.removeAllChild();
     load_arr();
 }
-/**/
+/*键盘事件*/
 function key_dir(){
   LGlobal.window.addEventListener(LKeyboardEvent.KEY_UP,function(event){
       switch (event.keyCode){
@@ -306,6 +316,55 @@ function key_dir(){
           case 38:deformation();break;
       }
   })
+}
+/*触屏事件*/
+function touch(){
+    //LGlobal.window.addEventListener(LMouseEvent.TOUCH_START,touchstart);
+    //LGlobal.window.addEventListener(LMouseEvent.TOUCH_MOVE,touchmove);
+    //LGlobal.window.addEventListener(LMouseEvent.TOUCH_END,touchend);
+    //function touchstart(event){
+    //    console.log(event);
+    //};
+    //function touchmove(event){
+    //    console.log(event);
+    //};
+    //function touchend(event){
+    //    console.log(event);
+    //};
+    window.addEventListener("touchstart",touchstart);
+    window.addEventListener("touchmove",touchmove);
+    window.addEventListener("touchend",touchend);
+    var startx=0,starty=0;
+    var movex=0,movey=0;
+    var endx=0,endy=0;
+    var direcx=0,direcy=0;
+    function touchstart(event){
+        startx=event.changedTouches[0].screenX;
+        starty=event.changedTouches[0].screenY;
+    }
+    function touchmove(event){
+        movex=event.changedTouches[0].screenX;
+        movey=event.changedTouches[0].screenY;
+    }
+    function touchend(event){
+        endx=event.changedTouches[0].screenX;
+        endy=event.changedTouches[0].screenY;
+        direcx=endx-startx;
+        direcy=endy-starty;
+        if(direcx<-10){
+            /*左移*/
+            move_left_right("left");
+        }else if(direcx>10){
+            /*右移*/
+            move_left_right("right");
+        }else if(direcy>20){
+            /*下移*/
+            move_down();
+        }else if(Math.abs(direcx)<5&&Math.abs(direcy)<5){
+            /*变形*/
+            deformation();
+        }
+    }
 }
 /*左边界判定*/
 function left_boundary(){
@@ -465,4 +524,16 @@ function eliminate(num){
             }
         }
     }
+}
+/*游戏结束*/
+function end(){
+    endlayer=new LSprite();
+    layer.addChild(endlayer);
+    endlayer.graphics.drawRect(0,"black",[0,0,width,height],true,"rgba(0,0,0,0.7)");
+    var field=new LTextField();
+    field.htmlText="<font face='microsoft yahei' color='#ffffff' size='80'><p>游戏结束！</p></font><font face='microsoft yahei' color='#ffffff' size='50'><p>您的最终得分：</p></font><font color='#4d85c5' size='100'><b >"+grade+"</b></font>";
+    field.x=100;
+    field.y=100;
+    field.textBaseline = "alphabetic";
+    endlayer.addChild(field);
 }
